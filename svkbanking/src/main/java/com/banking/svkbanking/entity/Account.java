@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotEmpty;
 
 @Entity
 @Table(name = "account")
@@ -24,10 +25,12 @@ public class Account {
 
 	@ManyToOne
 	@JoinColumn(name="type_id")
+	@NotEmpty
 	private AccountTypes accountType;
 	
 	@ManyToOne
 	@JoinColumn(name="user_id")
+	@NotEmpty
 	private User user;
 	
 	@Column(name = "isActive")

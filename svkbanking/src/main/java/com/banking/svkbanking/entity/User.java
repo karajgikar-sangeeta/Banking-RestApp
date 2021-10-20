@@ -1,28 +1,60 @@
 package com.banking.svkbanking.entity;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 
 @Entity
 @Table(name = "user")
 public class User {
 
-	@Id 
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "userId")
-	private Long userId;
+	@Id @GeneratedValue(strategy = GenerationType.IDENTITY) @Column(name = "userId") private Long userId;	
+	@Column(name = "password") @NotEmpty private String password;	
+	@Column(name = "fullName") @NotEmpty private String fullName;	
+	@Column(name = "email") 
+	@NotEmpty
+	@Email
+	private String email;
 	
+	@Column(name = "phoneNumber") private String phoneNumber;	
+	@Column(name = "dateCreated") private Date dateCreated;	
+	@ManyToMany(fetch=FetchType.EAGER) @JoinTable(name="user_role", joinColumns= @JoinColumn(name="user_id"), inverseJoinColumns = @JoinColumn(name = "role_id")) private List<Role> roles;
+	@OneToOne(fetch=FetchType.EAGER) @JoinColumn(name = "addressId") 
+	private UserAddress userAddress;
+	
+	
+	public UserAddress getUserAddress() {
+		return userAddress;
+	}
+
+	public void setUserAddress(UserAddress userAddress) {
+		this.userAddress = userAddress;
+	}
+
 	public Long getUserId() {
 		return userId;
+	}
+
+	public List<Role> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<Role> roles) {
+		this.roles = roles;
 	}
 
 	public void setUserId(Long userId) {
@@ -69,33 +101,6 @@ public class User {
 		this.dateCreated = dateCreated;
 	}
 
-	public UserRole getUserRole() {
-		return userRole;
-	}
-
-	public void setUserRole(UserRole userRole) {
-		this.userRole = userRole;
-	}
-
-	@Column(name = "password")
-	private String password;
-	
-	@Column(name = "fullName")
-	private String fullName;
-	
-	@Column(name = "email")
-	private String email;
-	
-	@Column(name = "phoneNumber")
-	private String phoneNumber;
-	
-	@Column(name = "dateCreated")
-	private Date dateCreated;
-	
-	@ManyToOne
-	@JoinColumn(name = "role_id", nullable = false)
-	private UserRole userRole;
-	
 	@Override
 	public int hashCode() {
 		return Objects.hash(userId);

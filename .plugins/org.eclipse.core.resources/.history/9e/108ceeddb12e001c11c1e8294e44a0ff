@@ -1,0 +1,5 @@
+package com.banking.svkbanking.entity;
+
+public class Role {
+
+}

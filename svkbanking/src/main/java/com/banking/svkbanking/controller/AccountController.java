@@ -2,10 +2,15 @@ package com.banking.svkbanking.controller;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.banking.svkbanking.BankingApplication;
 import com.banking.svkbanking.entity.Account;
 import com.banking.svkbanking.entity.AccountTypes;
 import com.banking.svkbanking.entity.Transaction;
@@ -27,10 +33,12 @@ import com.banking.svkbanking.repository.UserRepository;
 
 
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200, http://localhost:8080")
 @RestController
 @RequestMapping("/api")
 public class AccountController {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
 
 	@Autowired private AccountRepository accountRepo;
 	
@@ -57,6 +65,9 @@ public class AccountController {
 	
 	@GetMapping("/accounts/unapproved")
 	public ResponseEntity<List<Account>> getAllUnapprovedAccounts() throws ResourceNotFoundException {
+		
+		logger.info("Getting the list of unapproved accounts");
+		
 		List<Account> allAccounts = accountRepo.findAll();
 		allAccounts.removeIf(x -> x.isActive() == true);
 		return ResponseEntity.ok(allAccounts);
@@ -94,12 +105,11 @@ public class AccountController {
 		
 		List<Account> allAccounts = accountRepo.findAll();
 		if (allAccounts != null && allAccounts.size() > 0) {
-			for (int i = 0; i < allAccounts.size(); i++) {
-				Account accountItem = allAccounts.get(i);
-				if (accountItem.getUser().getUserId() == userId) {
-					accounts.add(accountItem);
+			allAccounts.forEach(x -> {
+				if(x.getUser().getUserId() == userId) {
+					accounts.add(x);
 				}
-			}			
+			});			
 		}
 		return ResponseEntity.ok(accounts);
 	}
@@ -114,7 +124,7 @@ public class AccountController {
 		var savedAccount = accountRepo.save(accountToSave);
 		return ResponseEntity.ok(savedAccount);
 	}
-		
+	
 	@PostMapping("/accounts/deposit")
 	public ResponseEntity<?> depositAmount(@RequestBody Transaction transaction) throws ResourceNotFoundException {
 		
@@ -168,7 +178,7 @@ public class AccountController {
 		
 	}
 	
-	@PostMapping("/accounts/withdraw")
+	@PostMapping(path = "/accounts/withdraw", produces=MediaType.APPLICATION_JSON_VALUE)	
 	public ResponseEntity<?> withdrawAmount(@RequestBody Transaction transaction) throws ResourceNotFoundException {
 		
 		var userExists = userRepo.findById(transaction.getUserId());
@@ -198,7 +208,7 @@ public class AccountController {
 		
 		Float accountBalance = account.getAccountBalance() - transaction.getAmount();
 		if (accountBalance < 0) {
-			return ResponseEntity.badRequest().body("Cannot withdraw amount of " + transaction.getAmount() + ": Insufficient funds");
+			 return ResponseEntity.badRequest().body("Cannot withdraw amount of " + transaction.getAmount() + ": Insufficient funds");
 		}
 		
 		account.setAccountBalance(accountBalance);
@@ -212,18 +222,20 @@ public class AccountController {
 	public ResponseEntity<?> getUsersTransactions(@PathVariable(value = "id") Long userId) throws ResourceNotFoundException {
 		
 		List<Transaction> transactions = new ArrayList<Transaction>(); 
+		
 		List<Transaction> allTransactions = transactionRepo.findAll();
 		if (allTransactions != null && allTransactions.size() > 0) {
-			for(int i = 0; i < allTransactions.size(); i++) {
-				Transaction transactionItem = allTransactions.get(i);
-				if (transactionItem.getUserId() == userId) {
-					transactions.add(transactionItem);
+			allTransactions.forEach((x) -> {
+				if (x.getUserId() == userId) {
+					transactions.add(x);
 				}
-			}
+			});
 		}
 		return ResponseEntity.ok(transactions);		
 	}		
 }
+
+
 
 
 
